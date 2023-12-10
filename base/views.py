@@ -5,9 +5,16 @@ import json
 from .models import *
 import stripe
 from django.views.decorators.csrf import csrf_exempt
+from dotenv import load_dotenv
+import os
 # Create your views here.
 
+load_dotenv()
+stripe_pub_key = os.getenv('STRIPE_PUBLISHABLE_KEY')
+stripe_sec_key = os.getenv('STRIPE_SECRET_KEY')
+
 def home(request):
+  
   products = Product.objects.all()
   customer = Customer.objects.get(user=request.user)
   order, created = Order.objects.get_or_create(customer=customer)
@@ -100,7 +107,7 @@ def processOrder(request):
 @csrf_exempt
 def getStripeKey(request):
   if request.method == 'GET':
-    stripe_api_key = settings.STRIPE_PUBLISHABLE_KEY
+    stripe_api_key = stripe_pub_key
     publickey = {'publicKey': stripe_api_key}
 
     return JsonResponse(publickey, safe=False)
@@ -108,7 +115,7 @@ def getStripeKey(request):
 @csrf_exempt
 def stripe_checkout_session(request):
   if request.method == 'GET':
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+    stripe.api_key = stripe_sec_key
     domain_url = 'http://127.0.0.1:8000/'
     try:
       checkout_session = stripe.checkout.Session.create(
